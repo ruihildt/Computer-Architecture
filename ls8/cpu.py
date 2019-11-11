@@ -2,6 +2,11 @@
 
 import sys
 
+# Add instructions
+LDI = 0b10000010
+PRN = 0b01000111
+HLT = 0b00000001
+
 class CPU:
     """Main CPU class."""
 
@@ -9,10 +14,14 @@ class CPU:
         """Construct a new CPU."""
         # program counter
         self.pc = 0
+        # flag
+        self.fl = 0
         # registers
         self.reg = [0] * 8
+        self.reg[6] = 0xF4
         # memory
         self.ram = [0] * 256
+        self.running = True
 
     def load(self):
         """Load a program into memory."""
@@ -23,12 +32,12 @@ class CPU:
 
         program = [
             # From print8.ls8
-            0b10000010, # LDI R0,8
+            0b10000010,  # LDI R0,8
             0b00000000,
             0b00001000,
-            0b01000111, # PRN R0
+            0b01000111,  # PRN R0
             0b00000000,
-            0b00000001, # HLT
+            0b00000001,  # HLT
         ]
 
         for instruction in program:
@@ -40,7 +49,7 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        # elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -58,8 +67,8 @@ class CPU:
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
-            #self.ie,
+            # self.fl,
+            # self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
             self.ram_read(self.pc + 2)
@@ -72,4 +81,28 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        while self.running:
+            # FETCH instruction from ram
+            IR = self.ram_read(self.pc)
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
+            # LDI instruction
+            if IR == LDI:
+                instruction_size = 3
+                # Add the value to the register
+                self.reg[operand_a] = operand_b
+
+            # PRN instruction
+            elif IR == PRN:
+                instruction_size = 2
+                print(self.reg[operand_a])
+
+            # HLT instruction
+            elif IR == HLT:
+                self.running = False
+            
+            else:
+                print(f'Unknown command "{IR}" provided')
+
+            self.pc += instruction_size
