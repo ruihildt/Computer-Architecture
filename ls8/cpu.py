@@ -35,7 +35,6 @@ class CPU:
             self.ram[address] = instruction
             address += 1
 
-
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
@@ -44,6 +43,12 @@ class CPU:
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
+
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, value, address):
+        self.ram[address] = value
 
     def trace(self):
         """
