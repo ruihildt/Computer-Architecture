@@ -127,6 +127,12 @@ class CPU:
                 self.reg[operand_a] = self.ram[self.SP]
                 self.SP += 1
 
+            elif IR == CALL:
+                instruction_size = 2
+                # Retrieve the value from RAM at the address stored in SP, and store that value in the register.
+                self.reg[operand_a] = self.ram[self.SP]
+                self.SP += 1
+
             else:
                 print(f'Unknown command "{IR}" provided')
 
