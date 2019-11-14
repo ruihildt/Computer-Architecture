@@ -5,7 +5,9 @@ import sys
 # Add instructions
 LDI = 0b10000010
 PRN = 0b01000111
+MUL = 0b10100010
 HLT = 0b00000001
+ADD = 0b10100000
 
 class CPU:
     """Main CPU class."""
@@ -44,9 +46,12 @@ class CPU:
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
+        if op == ADD:
             self.reg[reg_a] += self.reg[reg_b]
-        # elif op == "SUB": etc
+
+        elif op == MUL:
+            self.reg[reg_a] *= self.reg[reg_b]
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -98,7 +103,12 @@ class CPU:
             # HLT instruction
             elif IR == HLT:
                 self.running = False
-            
+
+            elif IR == MUL:
+                instruction_size = 3
+
+                self.alu(MUL, operand_a, operand_b)
+
             else:
                 print(f'Unknown command "{IR}" provided')
 
