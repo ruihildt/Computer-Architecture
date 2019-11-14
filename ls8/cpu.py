@@ -8,6 +8,8 @@ PRN = 0b01000111
 MUL = 0b10100010
 HLT = 0b00000001
 ADD = 0b10100000
+PUSH = 0b01000101
+POP = 0b01000110
 
 class CPU:
     """Main CPU class."""
@@ -20,9 +22,10 @@ class CPU:
         self.fl = 0
         # registers
         self.reg = [0] * 8
-        self.reg[6] = 0xF4
         # memory
         self.ram = [0] * 256
+        # Stack pointer
+        self.SP = 0xF4
         self.running = True
 
     def load(self, filename):
@@ -89,6 +92,8 @@ class CPU:
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
 
+
+
             # LDI instruction
             if IR == LDI:
                 instruction_size = 3
@@ -106,8 +111,21 @@ class CPU:
 
             elif IR == MUL:
                 instruction_size = 3
-
                 self.alu(MUL, operand_a, operand_b)
+
+            elif IR == PUSH:
+                instruction_size = 2
+
+                self.SP -= 1
+                value = self.reg[operand_a]
+                # print(f"{value:08b}")
+                self.ram[self.SP] = value
+
+            elif IR == POP:
+                instruction_size = 2
+                # Retrieve the value from RAM at the address stored in SP, and store that value in the register.
+                self.reg[operand_a] = self.ram[self.SP]
+                self.SP += 1
 
             else:
                 print(f'Unknown command "{IR}" provided')
