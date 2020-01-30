@@ -5,7 +5,11 @@ import sys
 # Add instructions
 LDI = 0b10000010
 PRN = 0b01000111
+MUL = 0b10100010
 HLT = 0b00000001
+ADD = 0b10100000
+PUSH = 0b01000101
+POP = 0b01000110
 
 class CPU:
     """Main CPU class."""
@@ -18,38 +22,39 @@ class CPU:
         self.fl = 0
         # registers
         self.reg = [0] * 8
-        self.reg[6] = 0xF4
         # memory
         self.ram = [0] * 256
+        # Stack pointer
+        self.SP = 0xF4
         self.running = True
 
-    def load(self):
+    def load(self, filename):
         """Load a program into memory."""
-
         address = 0
 
-        # For now, we've just hardcoded a program:
+        with open(filename) as f:
+            for line in f:
+                comment_split = line.split("#")
+                num = comment_split[0].strip()
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
+                if len(num) == 0:
+                    continue
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+
+                instruction = int(num, 2)
+                self.ram[address] = instruction
+
+                address += 1
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
+        if op == ADD:
             self.reg[reg_a] += self.reg[reg_b]
-        # elif op == "SUB": etc
+
+        elif op == MUL:
+            self.reg[reg_a] *= self.reg[reg_b]
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -87,6 +92,8 @@ class CPU:
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
 
+
+
             # LDI instruction
             if IR == LDI:
                 instruction_size = 3
@@ -101,7 +108,31 @@ class CPU:
             # HLT instruction
             elif IR == HLT:
                 self.running = False
-            
+
+            elif IR == MUL:
+                instruction_size = 3
+                self.alu(MUL, operand_a, operand_b)
+
+            elif IR == PUSH:
+                instruction_size = 2
+
+                self.SP -= 1
+                value = self.reg[operand_a]
+                # print(f"{value:08b}")
+                self.ram[self.SP] = value
+
+            elif IR == POP:
+                instruction_size = 2
+                # Retrieve the value from RAM at the address stored in SP, and store that value in the register.
+                self.reg[operand_a] = self.ram[self.SP]
+                self.SP += 1
+
+            elif IR == CALL:
+                instruction_size = 2
+                # Retrieve the value from RAM at the address stored in SP, and store that value in the register.
+                self.reg[operand_a] = self.ram[self.SP]
+                self.SP += 1
+
             else:
                 print(f'Unknown command "{IR}" provided')
 
